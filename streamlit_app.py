@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import streamlit as st
 
 from pinata import pin_file_to_ipfs, pin_json_to_ipfs, convert_data_to_json
+from crypto_funcs import encrypt_data, decrypt_data
 
 load_dotenv()
 
@@ -56,15 +57,18 @@ contract = load_contract()
 def pin_file(file_name, file, notary_sign, password=""):
     token_json = {}
     if password:
-        # file_data = encrypt(file.getvalue(), password)
+        st.write("pin_file(): Encrypting file")
+        file_data = encrypt_data(file.getvalue(), password)
         token_json["encrypted"] = True
         # Clear password
         password = ""
     else:
+        st.write("pin_file(): NOT encrypting file")
         file_data = file.getvalue()
 
     # Abhishikas hash function
-    data_hash = get_hash(file_data)
+    # data_hash = get_hash(file_data)
+    data_hash = 0x1234
     # Pin the file to IPFS with Pinata
     ipfs_file_hash = pin_file_to_ipfs(file_data)
 
@@ -94,7 +98,7 @@ notaries = [notary1, notary2]
 # st.title("ALGORITHMIC, MACHINE LEARNING, AND NEURAL TRADING TOOLS WITH ESG SENTIMENT FOCUS")
 # Had to use literal path here. Objected to Path('images/Title.jpg')
 
-#st.image('images/Title.jpg', use_column_width='auto')
+st.image('images/Title.jpg', use_column_width='auto')
 
 st.sidebar.title("Select a page")
 
@@ -127,7 +131,7 @@ if page == 'Client Register and File Selection':
         password = st.text_input("Enter password:")
         if password:
             st.write("Encrypt with password:", password)
-            st.session_state.encrypt = True
+            st.session_state.password = password
 
     notary = st.selectbox("Select a Notary:", notaries)
     st.session_state.notary = notary
@@ -138,11 +142,25 @@ if page == 'Notary Signature':
     st.write("Notary chosen:", st.session_state.notary)
     st.write("Client email:", st.session_state.client)
     st.write("File name:", st.session_state.file.name)
-    st.write("Do encrypt:", st.session_state.encrypt)
+    if 'password' in st.session_state:
+        st.write("Do encrypt:", st.session_state.password)
+        password = st.session_state.password
+    else:
+        password = ""
 
-    # pin_file(...)
-    # contract.functions.notarizeFile(...)
+    if st.button("Confirm and notarize"):
+        file_ipfs_hash = pin_file(
+            st.session_state.file.name,
+            st.session_state.file,
+            st.session_state.notary,
+            password
+            )
 
+        # If we want to display link to file itself, we need pin_file() to return ipfs_file_hash
+        #   Otherwise, that ipfs_file_hash can be read from the metadata
+        st.write("IPFS Gateway Link to notarized file metadata:")
+        st.markdown(f"[Pinned metadata for notarized file](https://ipfs.io/ipfs/{file_ipfs_hash})")
+        # contract.functions.notarizeFile(...)
 
 if page == 'Verification':
     st.title("Verify Authenticity")
