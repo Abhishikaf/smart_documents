@@ -35,29 +35,27 @@ def load_contract():
 # Load the contract
 contract = load_contract()
 
+def calculate_file_hash(file):
+    sha256_hash = hashlib.sha256()
+    bytes_data = file.getvalue()
+    sha256_hash.update(bytes_data)  
+    doc_hash = sha256_hash.hexdigest()
+    return doc_hash
 
-st.markdown("## Calculate Document Hash")
+def get_account_history(address):
+    st.markdown("## Account history")
+    document_filter = contract.events.DocumentCreated.createFilter(fromBlock="0x0", argument_filters={"docOwner": address})
+    reports = document_filter.get_all_entries()
 
-#st.write(dt.datetime.now())
-doc_name = st.text_input("Enter the name of the document")
-doc_hash = ""
-sha256_hash = hashlib.sha256()
-file = st.file_uploader("Upload Document")
-
-if file is not None:
-    st.write(file.name)
-
-if st.button("Calculate Document Hash"):
+    if reports:
+        for report in reports:
+            report_dictionary = dict(report)
+            st.write(report_dictionary['args']['fileHash'])
+        
+    else:
+        st.write("This account has not uploaded any documents")
     
-    
-    if file is not None:
-        bytes_data = file.getvalue()
-        sha256_hash.update(bytes_data)      
-        doc_hash = sha256_hash.hexdigest()
-        st.session_state.doc_hash = doc_hash
-st.write(doc_hash)
 
-st.markdown("---")
 
 st.write("Choose an account to get started")
 accounts = w3.eth.accounts
@@ -65,34 +63,29 @@ address = st.selectbox("Select Account", options=accounts)
 
 
 
-if st.button("Save Document on Blockchain"):
-    doc_hash = st.session_state.doc_hash
-    try:
-        tx_hash = contract.functions.createDoc(address, doc_hash).transact({'from': address, 'gas': 1000000})
-        receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-        st.write("Transaction receipt mined:")
-        st.write(dict(receipt))
-    except:
-        st.write("File is alreay saved on the blockchain!")
+doc_type = st.text_input("Enter the type of the document to be uploaded")
+doc_hash = ""
+
+file = st.file_uploader("Upload Document")
+
+if st.button("Calculate Document Hash"):    
     
+    if file is not None:        
+        doc_hash = calculate_file_hash(file)
+        st.write(doc_hash)
+
+#        st.session_state.doc_hash = doc_hash
+        try:
+            st.write(address)
+            tx_hash = contract.functions.createDoc(address, doc_hash).transact({'from': address, 'gas': 1000000})
+            receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+            st.write("Transaction receipt mined:")            
+        except:
+            st.write("File is alreay saved on the blockchain!")
     
-st.markdown("---")
 
-st.markdown("## Account history")
+get_account_history(address)
 
-if st.button("Get All Documents"):
-    st.write(address)
-    document_filter = contract.events.DocumentCreated.createFilter(fromBlock="0x0", argument_filters={"docOwner": address})
-    reports = document_filter.get_all_entries()
 
-    if reports:
-        for report in reports:
-            report_dictionary = dict(report)
-            st.write(report_dictionary)
-            st.markdown("### Document Log")
-            st.write(report_dictionary['args']['fileHash'])
-        
-    else:
-        st.write("This account has not uploaded any documents")
 
 

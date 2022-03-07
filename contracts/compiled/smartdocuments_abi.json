@@ -1,0 +1,77 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "fileName",
+				"type": "string"
+			},
+			{
+				"name": "docType",
+				"type": "string"
+			},
+			{
+				"name": "docOwner",
+				"type": "address"
+			},
+			{
+				"name": "hash",
+				"type": "string"
+			},
+			{
+				"name": "ipfsHash",
+				"type": "string"
+			},
+			{
+				"name": "encrypt",
+				"type": "bool"
+			},
+			{
+				"name": "notarize",
+				"type": "bool"
+			}
+		],
+		"name": "createDoc",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"name": "docOwner",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "fileHash",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "fileName",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "docType",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "status",
+				"type": "uint8"
+			},
+			{
+				"indexed": false,
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "DocumentCreated",
+		"type": "event"
+	}
+]
