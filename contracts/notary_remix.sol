@@ -2,6 +2,9 @@ pragma solidity ^0.5.0;
 
 // TODO: add IPFS stuff
 
+// id = web3.utils.soliditySha3(ipfs_hex, Date.now());
+
+
 contract NotaryProject {
     address admin;
 
@@ -10,27 +13,31 @@ contract NotaryProject {
     // TODO:  If encryption option is added, do we need a boolean field, for retrieval (and decrypting)
 
     struct notarizedFile {
-        string fileURI;
+        //string fileURI;
         uint timeStamp;
+	bytes ipfs_hash;
+	address signature;
     }
 
     mapping (bytes32 => notarizedFile) notarizedFiles;
     bytes32[] filesHashArray;
 
     // Client is the customer who wants docs to be notarized
+    // TODO: store email instead of name
     struct Client {
-        string name;
+        string email;
         bytes32[] clientFiles;
     }
 
     mapping (address=> Client) Clients;
     address[] clientsByAddress;
 
-    function newClient(string memory name) public returns(bool success) {
+    // Could be returns (bool, string memory), returning True/email_address if new, or False/old_email if already set
+    function newClient(string memory email) public returns(bool) {
         address thisClient = msg.sender;
 
-        if (bytes(Clients[msg.sender].name).length == 0 && bytes(name).length != 0) {
-            Clients[thisClient].name = name;
+        if (bytes(Clients[msg.sender].email).length == 0 && bytes(email).length != 0) {
+            Clients[thisClient].email = email;
             clientsByAddress.push(thisClient);
 
             return true;
@@ -39,13 +46,14 @@ contract NotaryProject {
         }
     }
 
-    function  notarizeFile(string memory fileURI, bytes32 SHA256notaryHash) public returns (bool) {
+    //function  notarizeFile(string memory fileURI, bytes32 SHA256notaryHash) public returns (bool) {
+    function  notarizeFile(bytes32 SHA256notaryHash) public returns (bool) {
 
     	// TODO: require that msg.sender is in the list of authorized Notaries.
 
         address thisAddress = msg.sender;
         // newClient() must have been called first
-        if (bytes(Clients[thisAddress].name).length != 0) {
+        if (bytes(Clients[thisAddress].email).length != 0) {
             if (bytes(fileURI).length != 0) {
                 // Do not allow changing ownership of a previously notarized file
                 if (bytes(notarizedFiles[SHA256notaryHash].fileURI).length == 0) {
@@ -76,7 +84,7 @@ contract NotaryProject {
 
     // TODO: Maybe use the clientFiles hashes to call getfile() to dump fileURI, ipfs_hash, etc. ?
     function getClient (address clientAddress) view public returns(string memory , bytes32[] memory) {
-        return(Clients[clientAddress].name, Clients[clientAddress].clientFiles);
+        return(Clients[clientAddress].email, Clients[clientAddress].clientFiles);
     }
 
     function getAllFles() view public returns (bytes32[] memory) {
