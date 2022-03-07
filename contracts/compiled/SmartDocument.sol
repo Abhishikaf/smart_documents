@@ -3,9 +3,12 @@ pragma solidity ^0.5.0;
 
 contract SmartDocument {
 
+    enum DocumentStatus {NotNotarized, PendingNotarization, Notarized}
+
     struct Notary{
         address notary;
         string license;
+        uint timestamp_notarized;
     }
 
     struct Document {
@@ -13,30 +16,37 @@ contract SmartDocument {
         string docType;
         address docOwner;
         string fileHash;
-        Notary notaryInfo;
+        //Notary notaryInfo;
         string ipfsHash;
         bool encrypt;
-        string status; // NotNotarized, PendingNotarization, Notarized
-       
+        DocumentStatus status; // NotNotrized, PendingNotarization, Notarized
         uint timestamp_created;
-        uint timestamp_notarized;
-        uint owner_DID; //Decentralized identifier
+    
+        //uint owner_DID; //Decentralized identifier
     }
 
-    mapping (string => Document) public documentList;
+    mapping (string => Document) documentList;
 
-    event DocumentCreated(address indexed docOwner, string fileHash, uint timestamp);
+    event DocumentCreated(address indexed docOwner, string fileHash, string fileName, string docType, DocumentStatus status, uint timestamp);
 
-    function createDoc(address docOwner, string memory hash) public {
+    function createDoc(string memory fileName, string memory docType, 
+                        address docOwner, string memory hash,
+                        string memory ipfsHash, bool encrypt, bool notarize) public {
+
         require(!checkDoc(hash));
-        documentList[hash] = Document(docOwner, hash, block.timestamp);
+        if(notarize) 
+            documentList[hash] = Document(fileName, docType, docOwner, hash, ipfsHash, encrypt, DocumentStatus.PendingNotarization, block.timestamp);
+            
+        else
+            documentList[hash] = Document(fileName, docType, docOwner, hash, ipfsHash, encrypt, DocumentStatus.NotNotarized, block.timestamp);      
+      
 
-        emit DocumentCreated(docOwner, hash, block.timestamp);
+        emit DocumentCreated(docOwner, hash, fileName, docType, documentList[hash].status, block.timestamp);
 
     }
 
     function checkDoc(string memory hash) view internal returns (bool) {
-        return documentList[hash].timestamp_created > 0;
+        return(documentList[hash].timestamp_created > 0);
     }
 
 
