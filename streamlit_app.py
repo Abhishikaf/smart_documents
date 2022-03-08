@@ -6,11 +6,16 @@ from web3 import Web3
 from pathlib import Path
 from dotenv import load_dotenv
 import streamlit as st
+import hashlib
+import sqlite3
 
 from pinata import pin_file_to_ipfs, pin_json_to_ipfs, convert_data_to_json
 from crypto_funcs import encrypt_data, decrypt_data
+from login_funcs import sign_up, sign_in
 
 load_dotenv()
+
+conn=sqlite3.connect("data.db")
 
 # Define and connect a new Web3 provider
 w3 = Web3(Web3.HTTPProvider(os.getenv("WEB3_PROVIDER_URI")))
@@ -30,7 +35,7 @@ st.set_page_config(
 def load_contract():
 
     # Load the contract ABI
-    with open(Path('./compiled/smartDocs_abi.json')) as f:
+    with open(Path('./contracts/compiled/smartdocuments_abi.json')) as f:
         contract_abi = json.load(f)
 
     # Set the contract address (this is the address of the deployed contract)
@@ -48,13 +53,41 @@ def load_contract():
 # Load the contract
 contract = load_contract()
 
+# Function to calculate the SHA256 hash of a document
+
+def calculate_file_hash(file):
+    sha256_hash = hashlib.sha256()
+    bytes_data = file.getvalue()
+    sha256_hash.update(bytes_data)  
+    doc_hash = sha256_hash.hexdigest()
+    return doc_hash
+
+
+# Function to get account history
+
+def get_account_history(address):
+    st.markdown("## Account history")
+    document_filter = contract.events.DocumentCreated.createFilter(fromBlock="0x0", argument_filters={"docOwner": address})
+    reports = document_filter.get_all_entries()
+
+    if reports:
+        for report in reports:
+            report_dictionary = dict(report)
+            st.write(report_dictionary['args']['fileHash'])
+            st.write(report_dictionary['args']['fileName'])
+            st.write(report_dictionary['args']['docType'])
+            st.write(report_dictionary['args']['status'] )
+        
+    else:
+        st.write("This account has not uploaded any documents")
+
 
 ################################################################################
 # Helper functions to pin files and json to Pinata
 ################################################################################
 
 
-def pin_file(file_name, file, notary_sign, password=""):
+def pin_file(file_name, file, password=""):
     token_json = {}
     if password:
         st.write("pin_file(): Encrypting file")
@@ -76,8 +109,7 @@ def pin_file(file_name, file, notary_sign, password=""):
     token_json["file_name"] = file_name
     token_json["file_hash"] = ipfs_file_hash
     token_json["file_data_hash"] = data_hash
-    token_json["notary_sign"] = notary_sign
- 
+     
     json_data = convert_data_to_json(token_json)
 
     # Pin the json to IPFS with Pinata
@@ -86,61 +118,133 @@ def pin_file(file_name, file, notary_sign, password=""):
     return json_ipfs_hash
 
 
-
 ##########
 ## MAIN ##
 ##########
 
-notary1 = os.getenv("NOTARY1")
-notary2 = os.getenv("NOTARY2")
-notaries = [notary1, notary2]
-
-# st.title("ALGORITHMIC, MACHINE LEARNING, AND NEURAL TRADING TOOLS WITH ESG SENTIMENT FOCUS")
-# Had to use literal path here. Objected to Path('images/Title.jpg')
+# Be able to change page_options according to Login status
+USER = 0
+NOTARY = 1
+THIRD_PARTY = 2
+login_status = [ [],  [],  [] ]
+if 'page_options' not in st.session_state:
+    st.session_state.page_options = ['Client Login', 'Notary Login', 'Verification: Login']
+    st.session_state.page_index = USER
 
 st.image('images/Title.jpg', use_column_width='auto')
 
 st.sidebar.title("Select a page")
 
-page = st.sidebar.radio('', options=['Client Register and File Selection', 'Notary Signature', 'Verification'], key='1')
+#page = st.sidebar.selectbox('', options=['Client Register and File Selection', 'Notary Signature', 'Verification'], key='1')
+page = st.sidebar.selectbox('', options=st.session_state.page_options, index=st.session_state.page_index )
 
 st.sidebar.markdown("""---""")
 
+if 'login_status' not in st.session_state:
+    st.session_state.login_status = login_status
+
+if page == 'Client Login':
+    userType = "User"
+    menu=["Sign Up","Sign In"]
+    choice=st.selectbox("Menu",menu)
+    if choice == "Sign Up":
+        sign_up(conn, userType)
+    elif choice == "Sign In":
+        st.session_state.login_status[USER] = sign_in(conn, userType)
+        if st.session_state.login_status[USER]:
+            st.session_state.page_options[USER] = 'Client Register and File Selection'
+            st.experimental_rerun()
+
+
+
 if page == 'Client Register and File Selection':
     doEncrypt=False
-
     st.markdown("## Register Client and Select File")
     st.write("Choose an account to get started")
     accounts = w3.eth.accounts
     address = st.selectbox("Select Account", options=accounts)
+    st.session_state.address = address
     st.markdown("---")
 
-    email_addr = st.text_input("Please register with email address:")
-    st.write("Email entered:", email_addr)
+    # email_addr = st.text_input("Please register with email address:")
+    # st.write("Email entered:", email_addr)
 #    registered = contract.functions.newClient(email_addr)
     # Save for use on other pages
-    st.session_state.client = email_addr
+    # st.session_state.client = email_addr
 
-    st.write("Select a file to be notarized:")
+    
+    doc_type = st.text_input("Enter the type of the document to be uploaded")
+    st.write(" Document Type:", doc_type)
+    st.session_state.doc_type = doc_type
+
+    st.write("Select a file to be uploaded:")
     file = st.file_uploader("Add file")
     st.session_state.file = file
+    password = ""
+    st.session_state.password = password
+    
     if file:
-        doEncrypt = st.checkbox("Optional: Encrypt " + file.name + " before IPFS upload")
+        st.write("Optional before IPFS upload:")
 
-    if doEncrypt:
-        password = st.text_input("Enter password:")
-        if password:
-            st.write("Encrypt with password:", password)
-            st.session_state.password = password
+        doEncrypt = st.checkbox("Encrypt " + file.name )
+        if doEncrypt:
+            password = st.text_input("Enter password:")
+            if password:
+                st.write("Encrypt with password:", password)
+                st.session_state.password = password
 
-    notary = st.selectbox("Select a Notary:", notaries)
-    st.session_state.notary = notary
-    st.write("Selected:", notary)
+        doNotarize = st.checkbox("Notarize " + file.name )
+        # if doNotarize:
+        #     notary = st.selectbox("Select a Notary:", notaries)
+        #     st.session_state.notary = notary
+        #     st.write("Selected:", notary)
+
+        
+        if st.button("Submit"):   
+            doc_hash = calculate_file_hash(file)
+            st.session_state.doc_hash = doc_hash
+            file_ipfs_hash = pin_file(
+                st.session_state.file.name,
+                st.session_state.file,
+                password
+             )  
+            try:
+                tx_hash = contract.functions.createDoc(file.name, doc_type, 
+                                                    address, doc_hash,
+                                                    file_ipfs_hash, doEncrypt, doNotarize
+                                                    ).transact({'from': address, 'gas': 1000000})
+                receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+                st.write("Transaction receipt mined:")            
+            except:
+                st.write("File is alreay saved on the blockchain!")
+    
+
+#get_account_history(st.session_state.address)
+
+if page == 'Notary Login':
+    userType = "Notary"
+    menu=["Sign Up","Sign In"]
+    choice=st.selectbox("Menu",menu)
+    if choice == "Sign Up":
+        st.write("Choose an account to get started")
+        accounts = w3.eth.accounts
+        address = st.selectbox("Select Account", options=accounts)
+        st.session_state.notary = address
+        # address should be passed to sign_up and saved in add_data()
+        sign_up(conn, userType)
+    elif choice == "Sign In":
+        st.session_state.login_status[NOTARY] = sign_in(conn, userType)
+        if st.session_state.login_status[NOTARY]:
+            st.session_state.page_options[NOTARY] = 'Notary Signature'
+            st.session_state.page_index = NOTARY
+            st.experimental_rerun()
 
 if page == 'Notary Signature':
+    userType = "Notary"
     st.title("Notarize File")
-    st.write("Notary chosen:", st.session_state.notary)
-    st.write("Client email:", st.session_state.client)
+    #st.write("Notary chosen:", st.session_state.notary)
+    # Unclear if we're going to ask for Email Address
+    #st.write("Client email:", st.session_state.client)
     st.write("File name:", st.session_state.file.name)
     if 'password' in st.session_state:
         st.write("Do encrypt:", st.session_state.password)
@@ -152,7 +256,7 @@ if page == 'Notary Signature':
         file_ipfs_hash = pin_file(
             st.session_state.file.name,
             st.session_state.file,
-            st.session_state.notary,
+            #st.session_state.notary,
             password
             )
 
@@ -163,5 +267,6 @@ if page == 'Notary Signature':
         # contract.functions.notarizeFile(...)
 
 if page == 'Verification':
+    userType = "thirdParty"
     st.title("Verify Authenticity")
 
