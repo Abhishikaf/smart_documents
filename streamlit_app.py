@@ -135,14 +135,13 @@ THIRD_PARTY = 2
 login_status = [ [],  [],  [] ]
 
 if 'page_options' not in st.session_state:
-    st.session_state.page_options = ['Client Login', 'Notary Login', 'Verification: Login']
+    st.session_state.page_options = ['Client Login', 'Notary Login', 'Verification Login']
     st.session_state.page_index = USER
 
 st.image('images/Title.jpg', use_column_width='auto')
 
 st.sidebar.title("Select a page")
 
-#page = st.sidebar.selectbox('', options=['Client Register and File Selection', 'Notary Signature', 'Verification'], key='1')
 page = st.sidebar.selectbox('', options=st.session_state.page_options, index=st.session_state.page_index )
 
 st.sidebar.markdown("""---""")
@@ -164,14 +163,13 @@ if page == 'Client Login':
             # Only one login can be active at a time
             st.session_state.login_status[NOTARY] = []
             st.session_state.login_status[THIRD_PARTY] = []
-            #st.session_state.page_options[USER] = 'Client Register and File Selection'
-            st.session_state.page_options = ['Client Register and File Selection', 'Notary Login', 'Verification: Login']
+            st.session_state.page_options = ['Client File Selection', 'Notary Login', 'Verification Login']
             st.experimental_rerun()
 
 
-if page == 'Client Register and File Selection':
+if page == 'Client File Selection':
     doEncrypt=False
-    st.markdown("## Register Client and Select File")
+    st.markdown("## Select File")
     st.write("Choose an account to get started")
     accounts = w3.eth.accounts
     address = st.selectbox("Select Account", options=accounts)
@@ -270,7 +268,7 @@ if page == 'Notary Login':
             # Only one login can be active at a time
             st.session_state.login_status[USER] = []
             st.session_state.login_status[THIRD_PARTY] = []
-            st.session_state.page_options = ['Client Login', 'Notary Signature', 'Verification: Login']
+            st.session_state.page_options = ['Client Login', 'Notary Signature', 'Verification Login']
             st.experimental_rerun()
 
 if page == 'Notary Signature':
@@ -296,6 +294,23 @@ if page == 'Notary Signature':
         #   Otherwise, that ipfs_file_hash can be read from the metadata
         st.write("IPFS Gateway Link to notarized file metadata:")
         st.markdown(f"[Pinned metadata for notarized file](https://ipfs.io/ipfs/{file_ipfs_hash})")
+
+if page == 'Verification Login':
+    userType = "User"
+    # Even if user sign_in() fails, we want this index
+    st.session_state.page_index = THIRD_PARTY
+    menu=["Sign In","Sign Up"]
+    choice=st.selectbox("Menu",menu)
+    if choice == "Sign Up":
+        sign_up(conn, userType)
+    elif choice == "Sign In":
+        st.session_state.login_status[THIRD_PARTY] = sign_in(conn, userType)
+        if st.session_state.login_status[THIRD_PARTY]:
+            # Only one login can be active at a time
+            st.session_state.login_status[NOTARY] = []
+            st.session_state.login_status[USER] = []
+            st.session_state.page_options = ['Client Login', 'Notary Login', 'Verification']
+            st.experimental_rerun()
 
 if page == 'Verification':
     userType = "thirdParty"
