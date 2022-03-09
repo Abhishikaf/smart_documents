@@ -52,6 +52,31 @@ Once you have followed the above steps, the app can be run with the command ```s
 
 ## Acknowledgements:
 
+Documents used in the banner graphic are all Public Domain except for one:
+
+https://en.wikipedia.org/wiki/Notary_public#/media/File:Pakistan_Notary_example.jpg
+This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
+
+The rest are Public Domain:
+
+https://kingcounty.gov/~/media/depts/records-licensing/archives/images/statecert.ashx?la=en
+A Marriage Certificate from King County
+
+https://upload.wikimedia.org/wikipedia/commons/6/6c/Constitution_of_the_United_States%2C_page_1.jpg
+The Constitution of the United States
+
+https://www.irs.gov/pub/irs-pdf/f1040.pdf
+IRS Form 1040 for personal income tax reporting.
+
+https://en.wikipedia.org/wiki/Contract#/media/File:Insurance_Contact_2.jpg
+Thomas Boylston to Thomas Jefferson, May 1786, Maritime Insurance Premiums
+
+https://www.hud.gov/sites/documents/1.PDF
+HUD Form for Real Estate Sales
+
+https://en.wikipedia.org/wiki/Magna_Carta#/media/File:Magna_Carta_(British_Library_Cotton_MS_Augustus_II.106).jpg
+The Magna Carta
+
 ## Conception and Coding:
 
 Abhishika Fatehpuria (abhishika@gmail.com)
