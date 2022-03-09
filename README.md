@@ -55,6 +55,8 @@ Once you have followed the above steps, the app can be run with the command ```s
 Documents used in the banner graphic are all Public Domain except for one:
 
 https://en.wikipedia.org/wiki/Notary_public#/media/File:Pakistan_Notary_example.jpg
+Pakistan Notary Example
+
 This file is licensed under the Creative Commons Attribution-Share Alike 4.0 International license.
 
 The rest are Public Domain:
