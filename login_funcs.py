@@ -11,7 +11,6 @@ import sqlite3
 #c=conn.cursor()
 
 
-
 def create_table(c):
     c.execute("CREATE TABLE IF NOT EXISTS usertable(usertype TEXT, username TEXT, password TEXT, licence TEXT)")
 
@@ -21,8 +20,23 @@ def add_data(conn, usertype, username, password,licence):
     conn.commit()
 
 def login_user(c, usertype,username,password,licence):
-    c.execute("SELECT * FROM usertable WHERE usertype=? AND username=? AND password=?",(usertype, username, password))
+    if usertype == "Notary":
+        c.execute("SELECT * FROM usertable WHERE usertype=? AND password=? AND licence=?",(usertype, password, licence))
+    else:
+        c.execute("SELECT * FROM usertable WHERE usertype=? AND username=? AND password=?",(usertype, username, password))
     data=c.fetchall()
+    return data
+
+def check_user(conn, username):
+    st.write("check_user():", username)
+    st.session_state.userChecked = True
+    c = conn.cursor()
+    create_table(c)
+    c.execute("SELECT * FROM usertable WHERE username=?",(username,))
+    data=c.fetchall()
+#    users=view_all_users(c)
+#    df=pd.DataFrame(users)
+#    st.dataframe(df)
     return data
 
 # Will remove after checking how it works
@@ -55,15 +69,16 @@ def view_all_users(c):
 def sign_up(conn, new_usertype): 
     c=conn.cursor()
     st.subheader("Please create a new account to be able use our services")
-    #new_usertype=st.sidebar.selectbox("Who are you?", userType)
-    new_username=st.text_input("User Name")
-    new_password=st.text_input("Password",type="password")
     if new_usertype=="Notary":
         new_licence=st.text_input("Licence number")
+    else:
+        new_username=st.text_input("User Name")
+
+    new_password=st.text_input("Password",type="password")
     if st.button("SignUp"):
         create_table(c)
         if new_usertype=="Notary":
-            add_data(conn, new_usertype, new_username, new_password,new_licence)
+            add_data(conn, new_usertype, "", new_password, new_licence)
         else:
             add_data(conn, new_usertype, new_username, new_password,"")
 
@@ -76,18 +91,23 @@ def sign_in(conn, usertype):
     c=conn.cursor()
     st.subheader("Please sign in to use the Smart Contract services")
     #usertype=st.sidebar.selectbox("Who are you?", userType)
-    username=st.text_input("User Name")
-    password=st.text_input("Password",type="password")
     if usertype=="Notary":
         licence=st.text_input("Enter your Notary licence:")
+    else:
+        username=st.text_input("User Name")
+
+    password=st.text_input("Password",type="password")
+
     if st.checkbox("Login"):
         create_table(c)
-        #if usertype=="Notary":
-        #    result=login_user(c, usertype, username, password, licence)
-        #else:
-        result=login_user(c, usertype, username, password,"")
+        if usertype=="Notary":
+            result=login_user(c, usertype, "", password, licence)
+            identifier = licence
+        else:
+            result=login_user(c, usertype, username, password,"")
+            identifier = username
         if result:
-            st.success("{} is logged in as a verified {}".format(username, usertype))
+            st.success("{} is logged in as a verified {}".format(identifier, usertype))
         else:
             st.warning("Incorrect Password or User Name")
 
