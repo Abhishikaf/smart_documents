@@ -34,9 +34,15 @@ def check_user(conn, username):
     create_table(c)
     c.execute("SELECT * FROM usertable WHERE username=?",(username,))
     data=c.fetchall()
-#    users=view_all_users(c)
-#    df=pd.DataFrame(users)
-#    st.dataframe(df)
+    return data
+
+def check_license(conn, identifier):
+    st.write("check_licence():", identifier)
+    st.session_state.userChecked = True
+    c = conn.cursor()
+    create_table(c)
+    c.execute("SELECT * FROM usertable WHERE licence=?",(identifier,))
+    data=c.fetchall()
     return data
 
 # Will remove after checking how it works
@@ -109,8 +115,16 @@ def sign_in(conn, usertype):
         if result:
             st.success("{} is logged in as a verified {}".format(identifier, usertype))
         else:
-            st.warning("Incorrect Password or User Name")
+            if usertype=="Notary":
+                data = check_license(conn, licence)
+            else:
+                data = check_user(conn, username)
+            if data:
+                st.warning("Incorrect Password, try again.")
+            else:
+                st.warning("User Name does not exist. Please Sign Up")
 
+#        st.sidebar.write("login result:", result)
         return result
     
 #main()
