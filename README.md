@@ -7,13 +7,22 @@ This application was conceived to be a means to upload and have access to docume
 This application was written in Python, Solidity, and SQL. It uses the following technologies:
 
 - streamlit
-- 
 
-The application uses Remix IDE to implement a smart contract.
-The application uses Ganache to simulate an Ethereum payment network.
-The application requires a Pinata account. You will need to acquire a PINATA_API_KEY and PINATA_SECRET_API_KEY.
+Please verify you have installed all of the requirements.
+
+- The application uses Remix IDE to implement a smart contract. This can be run in the online version on their website.
+- The application uses Ganache to simulate an Ethereum payment network. You must install Ganache.
+- The application uses Metamask to connect the Ganache test network to the smart contract deployed in Remix IDE.
+- The application uses Remix IDE to implement a smart contract. This can be run in the online version on their website.
+- The application requires a Pinata account. You will need to acquire a PINATA_API_KEY and PINATA_SECRET_API_KEY.
 
 ## Usage:
+
+The app can be run with the command ```streamlit run app.py``` in the application folder.
+
+You will need to start the program Ganache to simulate a local Ethereum network.
+
+
 
 ## Future Development:
 
