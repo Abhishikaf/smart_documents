@@ -18,9 +18,33 @@ Please verify you have installed all of the requirements.
 
 ## Usage:
 
-The app can be run with the command ```streamlit run app.py``` in the application folder.
+This program was designed to use an Ethereum test network simulated by Ganache. Please follow these steps:
 
 You will need to start the program Ganache to simulate a local Ethereum network.
+
+Open the program Metamask and enter several accounts from the Ganache test network.
+
+Open the web application Remix IDE. Upload the smart contract file ```SmartDocument.sol```. 
+
+Compile the contract. Use the compiler version 0.5.0.
+
+Deploy the contract. For the enviornment select Web3 Provider and enter the RPC Server address displayed on Ganache into the box that asks for the Web3 Provider Endpoint. Choose an account that corresponds to one of the accounts in Ganache. Select the SmartDocument contract. Push the Deploy button.
+
+Get the contract address by hitting the copy button to the right of the deployed contract.
+
+Create a file named ```.env``` in the application folder. You will need to edit it to look like this:
+
+```
+PINATA_API_KEY='yourpinataapikeyhere'
+PINATA_SECRET_API_KEY='yourpinatasecretkeyhere'
+WEB3_PROVIDER_URI=http://127.0.0.1:7545
+SMART_CONTRACT_ADDRESS=0xA5637079F4313db0AB0ddb50f50662771A9F3C94
+```
+Note that the Pinata API Key and Pinata Secret Key are enclosed in single quotes. The Web3 Provider URI will be the RPC Server Address visible in your Ganache application. The Smart Contract Address will be the address copied from the deployed smart contract in your Remix IDE application.
+
+Once you have followed the above steps, the app can be run with the command ```streamlit run app.py``` in the application folder.
+
+
 
 
 
