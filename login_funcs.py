@@ -27,6 +27,8 @@ def login_user(c, usertype,username,password,licence):
     data=c.fetchall()
     return data
 
+# Should add usertype parameter, and then
+#    c.execute("SELECT * FROM usertable WHERE usertype=? AND username=?",(usertype, username,))
 def check_user(conn, username):
     st.write("check_user():", username)
     st.session_state.userChecked = True
