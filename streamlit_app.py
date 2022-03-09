@@ -100,22 +100,11 @@ def get_account_history(address):
 ################################################################################
 
 
-def pin_file(file_name, file_data, encrypted):
+def pin_file(file_name, file_data, encrypted, doc_hash):
     token_json = {}
-#    if password:
-#        #st.write("pin_file(): Encrypting file")
-#        file_data = encrypt_data(file.getvalue(), password)
-#        token_json["encrypted"] = True
-#        # Clear password
-#        password = ""
-#    else:
-#        #st.write("pin_file(): NOT encrypting file")
-#        file_data = file.getvalue()
 
     st.sidebar.write("pin_file encrypted:", encrypted)
 
-    doc_hash = calculate_file_hash(file_data)
-    st.session_state.doc_hash = doc_hash
     # Pin the file to IPFS with Pinata
     ipfs_file_hash = pin_file_to_ipfs(file_data)
 
@@ -132,7 +121,7 @@ def pin_file(file_name, file_data, encrypted):
     json_ipfs_hash = pin_json_to_ipfs(json_data)
 
     # This doc_hash must be used because encryption may have happened here
-    return json_ipfs_hash, doc_hash
+    return json_ipfs_hash
 
 
 ##########
@@ -225,44 +214,38 @@ if page == 'Client Register and File Selection':
                 st.session_state.doEncrypt = False
         else:
             st.session_state.file_data = file.getvalue()
+            st.session_state.doEncrypt = False
 
         if "doEncrypt" in st.session_state:
             st.sidebar.write("Client.2: state.doEncrypt:", st.session_state.doEncrypt)
-        #doNotarize = st.checkbox("Notarize " + file.name )
-        # if doNotarize:
-        #     notary = st.selectbox("Select a Notary:", notaries)
-        #     st.session_state.notary = notary
-        #     st.write("Selected:", notary)
 
         choice = st.radio("", ("IPFS and Notarize", "Only IPFS"))
         
         if st.button("Submit"):   
+            doc_hash = calculate_file_hash(st.session_state.file_data)
             if choice == "Only IPFS":
-                file_ipfs_hash, doc_hash = pin_file(
+                file_ipfs_hash = pin_file(
                     st.session_state.file.name,
                     st.session_state.file_data,
-                    st.session_state.doEncrypt
+                    st.session_state.doEncrypt,
+                    doc_hash
                  )  
                 st.write("IPFS Gateway Link to file metadata:")
                 st.markdown(f"[Pinned metadata for file](https://ipfs.io/ipfs/{file_ipfs_hash})")
                 st.sidebar.write("pinned only IPFS, doc_hash:", doc_hash)
             else:
                 file_ipfs_hash = ""
-                doc_hash = calculate_file_hash(file.getvalue())
+                #doc_hash = calculate_file_hash(file.getvalue())
                 st.sidebar.write("not pinned, doc_hash:", doc_hash)
-
-            st.session_state.doc_hash = doc_hash
 
             doNotarize = True
             try:
-                st.sidebar.write("createDoc with doc_hash:", doc_hash)
                 tx_hash = contract.functions.createDoc(file.name, doc_type, 
                                         address, doc_hash,
                                         file_ipfs_hash, st.session_state.doEncrypt, doNotarize
                                         ).transact({'from': address, 'gas': 1000000})
                 receipt = w3.eth.waitForTransactionReceipt(tx_hash)
                 st.write("Blockchain transaction complete, available for Notary")            
-                st.session_state.doEncrypt = False
             except:
                 st.write("File is already saved on the blockchain and available for Notary!")
     
@@ -287,41 +270,32 @@ if page == 'Notary Login':
             # Only one login can be active at a time
             st.session_state.login_status[USER] = []
             st.session_state.login_status[THIRD_PARTY] = []
-            #st.session_state.page_options[NOTARY] = 'Notary Signature'
             st.session_state.page_options = ['Client Login', 'Notary Signature', 'Verification: Login']
             st.experimental_rerun()
 
 if page == 'Notary Signature':
     userType = "Notary"
     st.title("Notarize File")
-    #st.write("Notary chosen:", st.session_state.notary)
     # Unclear if we're going to ask for Email Address
     #st.write("Client email:", st.session_state.client)
     st.write("File name:", st.session_state.file.name)
     st.sidebar.write("Notary: state.doEncrypt:", st.session_state.doEncrypt)
     st.sidebar.write("Notary: state.password:", st.session_state.password)
-    if 'password' in st.session_state:
-        if st.session_state.password != "":
-            #st.write("Do encrypt:", st.session_state.password)
-            doEncrypt = True
-        else:
-            doEncrypt = False
 
     get_files_to_notarize()
 
     if st.button("Confirm and notarize"):
-        file_ipfs_hash, doc_hash = pin_file(
+        file_ipfs_hash = pin_file(
             st.session_state.file.name,
             st.session_state.file_data,
-            #st.session_state.notary,
-            doEncrypt
+            st.session_state.doEncrypt,
+            calculate_file_hash(st.session_state.file_data)
             )
 
         # If we want to display link to file itself, we need pin_file() to return ipfs_file_hash
         #   Otherwise, that ipfs_file_hash can be read from the metadata
         st.write("IPFS Gateway Link to notarized file metadata:")
         st.markdown(f"[Pinned metadata for notarized file](https://ipfs.io/ipfs/{file_ipfs_hash})")
-        # contract.functions.notarizeFile(...)
 
 if page == 'Verification':
     userType = "thirdParty"
