@@ -1,4 +1,5 @@
-![https://github.com/Abhishikaf/smart_documents/blob/main/banner4.jpg?raw=true]()
+
+![](https://github.com/Abhishikaf/smart_documents/blob/main/banner4.jpg?raw=true)
 
 # Smart Documents: Notarization with IFPS File Storage
 
