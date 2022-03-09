@@ -1,1 +1,2 @@
-# smart_documents
+# Smart Documents: Notarization with IFPS File Storage
+
