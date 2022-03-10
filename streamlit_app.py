@@ -184,7 +184,7 @@ st.sidebar.markdown("""---""")
 
 accounts = w3.eth.accounts
 notary_options = accounts[8:10]
-notary_licence = ['1234', '5678']
+notary_licence = ['123456', '654321']
 
 if 'login_status' not in st.session_state:
     st.session_state.login_status = login_status
