@@ -56,6 +56,59 @@
 		"type": "function"
 	},
 	{
+		"constant": true,
+		"inputs": [],
+		"name": "getNotarizedFiles",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string[]"
+			},
+			{
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "hash",
+				"type": "string"
+			}
+		],
+		"name": "getVerifyData",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			},
+			{
+				"name": "",
+				"type": "address"
+			},
+			{
+				"name": "",
+				"type": "string"
+			},
+			{
+				"name": "",
+				"type": "string"
+			},
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"constant": false,
 		"inputs": [
 			{
@@ -69,6 +122,14 @@
 			{
 				"name": "docHash",
 				"type": "string"
+			},
+			{
+				"name": "notaryHash",
+				"type": "string"
+			},
+			{
+				"name": "timestamp",
+				"type": "uint256"
 			}
 		],
 		"name": "notarizeDoc",
@@ -190,6 +251,20 @@
 		"type": "function"
 	},
 	{
+		"constant": true,
+		"inputs": [],
+		"name": "notarizedCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
@@ -243,6 +318,11 @@
 			{
 				"indexed": false,
 				"name": "license",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "notaryHash",
 				"type": "string"
 			},
 			{
