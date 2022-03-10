@@ -41,13 +41,13 @@ This program was designed to use an Ethereum test network simulated by Ganache. 
 
 You will need to start the program Ganache to simulate a local Ethereum network.
 
-Open the program Metamask and import several accounts from the Ganache test network, using their private keys which can be accessed by clicking the key icon to the right of the account.
+Open the program Metamask and import one or several accounts from the Ganache test network, using their private keys which can be accessed by clicking the key icon to the right of the account.
 
 Open the web application Remix IDE. Upload the smart contract file ```SmartDocument.sol```. 
 
 Compile the contract. Use the compiler version 0.5.0.
 
-Deploy the contract. For the enviornment select Web3 Provider and enter the RPC Server address displayed on Ganache into the box that asks for the Web3 Provider Endpoint. Choose an account that corresponds to one of the accounts in Ganache. Select the SmartDocument contract. Push the Deploy button.
+Deploy the contract: For the enviornment select Injected Web3 and enter an address displayed on Ganache into the box that says ```At Address```.
 
 Get the contract address by hitting the copy button to the right of the deployed contract.
 
