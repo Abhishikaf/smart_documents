@@ -50,13 +50,16 @@ SMART_CONTRACT_ADDRESS=0xA5637079F4313db0AB0ddb50f50662771A9F3C94
 ```
 Note that the Pinata API Key and Pinata Secret Key are enclosed in single quotes. The Web3 Provider URI will be the RPC Server Address visible in your Ganache application. The Smart Contract Address will be the address copied from the deployed smart contract in your Remix IDE application.
 
-Once you have followed the above steps, the app can be run with the command ```streamlit run app.py``` in the application folder.
-
 ### Running the Program
 
-
+Once you have followed the above steps, the app can be run with the command ```streamlit run app.py``` in the application folder.
 
 ## Future Development:
+
+- Implement DID - Decentralized Identification
+- Implement verification of Notary credentials using existing databases
+- Allow documents to be signed by multiple parties
+- Save user accounts on a decentralized platform
 
 ## Acknowledgements:
 
