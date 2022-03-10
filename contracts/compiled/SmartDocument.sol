@@ -32,10 +32,11 @@ contract SmartDocument {
     mapping (string =>Notary) notaryInfo;
 
     event DocumentCreated(address indexed docOwner, string fileHash, string fileName, string docType, uint timestamp);
-    event DocumentNotarized(string docHash, address indexed notary, string license, uint timestamp);
+    event DocumentNotarized(string docHash, address indexed notary, string license, string notaryHash, uint timestamp);
 
     uint public docCount;
     uint public pendingCount;
+    uint public notarizedCount;
 
     constructor() public{
         docCount = 0;
@@ -64,18 +65,19 @@ contract SmartDocument {
     }
 
 
-    function notarizeDoc(address notary, string memory license, string memory docHash) public {
+    function notarizeDoc(address notary, string memory license, string memory docHash, string memory notaryHash, uint timestamp) public {
         require(documentList[docHash].status == DocumentStatus.PendingNotarization);
         
         notaryInfo[docHash].notary = notary;
         notaryInfo[docHash].license = license;
-        notaryInfo[docHash].timestamp_notarized = block.timestamp;
+        notaryInfo[docHash].timestamp_notarized = timestamp;
+        notaryInfo[docHash].notarized_hash = notaryHash;
         documentList[docHash].status = DocumentStatus.Notarized;
-
+        
         pendingCount--;
+        notarizedCount++;
 
-        emit DocumentNotarized(docHash, notary, license, block.timestamp);
-
+        emit DocumentNotarized(docHash, notary, license,notaryHash, timestamp);
     }
 
     function getDocuments() public view returns (Document [] memory){
@@ -105,6 +107,32 @@ contract SmartDocument {
         }
 
         return (dochashes, ownerAddress);
+    }
+
+    function getNotarizedFiles() public view returns (string[] memory, string[] memory){
+
+        string[] memory dochashes = new string[](notarizedCount);
+        string[] memory notaryhashes = new string[](notarizedCount);
+
+        uint j = 0;
+
+        for(uint i=0; i<docCount && j< notarizedCount; i++){
+            Document storage doc = documentList[documentHash[i]];
+            Notary storage notary = notaryInfo[documentHash[i]];
+            if(doc.status == DocumentStatus.Notarized){
+                dochashes[j] = doc.fileHash;
+                notaryhashes[j] = notary.notarized_hash;
+                j++;
+            }
+        }
+
+        return (dochashes, notaryhashes);
+    }
+
+    function getVerifyData(string calldata hash) external view returns (address, address , string memory, string memory, uint){
+        require(documentList[hash].status == DocumentStatus.Notarized);
+               
+        return(documentList[hash].docOwner, notaryInfo[hash].notary, documentList[hash].docType, notaryInfo[hash].license, notaryInfo[hash].timestamp_notarized);
     }
 
     function getDocState(string calldata hash) external view returns (uint) {
