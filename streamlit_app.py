@@ -65,10 +65,10 @@ def calculate_file_hash(bytes_data):
 
 # Function to get files to be notarized
 
-def get_files_to_notarize(pending_file_container):
+def get_files_to_notarize(license,pending_file_container):
 
     pending_file_container.empty()
-    pendingFiles = contract.functions.getPendingFiles().call()
+    pendingFiles = contract.functions.getPendingFiles(license).call()
     with pending_file_container.container():
         if pendingFiles:
             df = pd.DataFrame(pendingFiles).T
@@ -129,10 +129,8 @@ def get_account_history(address, account_history):
 ################################################################################
 
 
-def pin_file(file_name, file_data, encrypted, notarized, doc_hash):
+def pin_file(file_name, file_data, encrypted, notarized, license, doc_hash):
     token_json = {}
-
-    st.sidebar.write("pin_file encrypted:", encrypted)
 
     # Pin the file to IPFS with Pinata
     ipfs_file_hash = pin_file_to_ipfs(file_data)
@@ -150,7 +148,9 @@ def pin_file(file_name, file_data, encrypted, notarized, doc_hash):
         token_json["notarized"] = True
     else:
         token_json["notarized"] = False
-     
+
+    token_json["notary_id"] = license
+
     json_data = convert_data_to_json(token_json)
 
     # Pin the json to IPFS with Pinata
@@ -183,6 +183,8 @@ page = st.sidebar.selectbox('', options=st.session_state.page_options, index=st.
 st.sidebar.markdown("""---""")
 
 accounts = w3.eth.accounts
+notary_options = accounts[8:10]
+notary_licence = ['1234', '5678']
 
 if 'login_status' not in st.session_state:
     st.session_state.login_status = login_status
@@ -259,38 +261,46 @@ if page == 'Client File Selection':
             st.session_state.file_data = file.getvalue()
             st.session_state.doEncrypt = False
 
-        if "doEncrypt" in st.session_state:
-            st.sidebar.write("Client.2: state.doEncrypt:", st.session_state.doEncrypt)
-
         choice = st.radio("", ("IPFS and Notarize", "Only IPFS"))
+
         
+        if choice == "IPFS and Notarize":
+            notary = st.selectbox("Select Notary Address", notary_options)
+            index = notary_options.index(notary)
+            st.session_state.index = index
+        
+        
+
         if st.button("Submit"):   
             doc_hash = calculate_file_hash(st.session_state.file_data)
             
             if choice == "Only IPFS":
                 doNotarize = False
-                file_ipfs_hash = pin_file(
+                license = ""
+                st.session_state.license = license        
+            else:
+                
+                license = notary_licence[st.session_state.index] # get_notary_license(notary) --- pull from notary database
+                st.session_state.license = license
+                doNotarize = True
+                
+            file_ipfs_hash = pin_file(
                     st.session_state.file.name,
                     st.session_state.file_data,
                     st.session_state.doEncrypt,
                     doNotarize,
+                    st.session_state.license,
                     doc_hash
                  )  
-                st.write("IPFS Gateway Link to file metadata:")
-                st.markdown(f"[Pinned metadata for file](https://ipfs.io/ipfs/{file_ipfs_hash})")
-                st.sidebar.write("pinned only IPFS, doc_hash:", doc_hash)
-            else:
-                file_ipfs_hash = ""
-                #doc_hash = calculate_file_hash(file.getvalue())
-                doNotarize = True
-                st.sidebar.write("not pinned, doc_hash:", doc_hash)
-
+            st.write("IPFS Gateway Link to file metadata:")
+            st.markdown(f"[Pinned metadata for file](https://ipfs.io/ipfs/{file_ipfs_hash})")
+            
            
             try:
                 doc_hash = calculate_file_hash(file.getvalue())
                 tx_hash = contract.functions.createDoc(file.name, doc_type, 
                                         address, doc_hash,
-                                        file_ipfs_hash, doEncrypt, doNotarize
+                                        file_ipfs_hash, doEncrypt, doNotarize, st.session_state.license,
                                         ).transact({'from': address, 'gas': 1000000})
                 receipt = w3.eth.waitForTransactionReceipt(tx_hash)
                 st.write("Blockchain transaction complete, available for Notary")            
@@ -303,23 +313,23 @@ if page == 'Client File Selection':
 if page == 'Notary Login':
     userType = "Notary"
     st.session_state.page_index = NOTARY
-    menu=["Sign In","Sign Up"]
-    choice=st.selectbox("Menu",menu)
-    if choice == "Sign Up":
-        st.write("Choose an account to get started")
-        accounts = w3.eth.accounts
-        address = st.selectbox("Select Account", options=accounts)
-        st.session_state.notary = address
-        # address should be passed to sign_up and saved in add_data()
-        sign_up(conn, userType)
-    elif choice == "Sign In":
-        st.session_state.login_status[NOTARY] = sign_in(conn, userType)
-        if st.session_state.login_status[NOTARY]:
-            # Only one login can be active at a time
-            st.session_state.login_status[USER] = []
-            st.session_state.login_status[THIRD_PARTY] = []
-            st.session_state.page_options = ['Client Login', 'Notary Signature', 'Verification Login']
-            st.experimental_rerun()
+    # menu=["Sign In","Sign Up"]
+    # choice=st.selectbox("Menu",menu)
+    # if choice == "Sign Up":
+    #     st.write("Choose an account to get started")
+    #     accounts = w3.eth.accounts
+    #     address = st.selectbox("Select Account", options=accounts)
+    #     st.session_state.notary = address
+    #     # address should be passed to sign_up and saved in add_data()
+    #     sign_up(conn, userType)
+    # elif choice == "Sign In":
+    st.session_state.login_status[NOTARY] = sign_in(conn, userType)
+    if st.session_state.login_status[NOTARY]:
+        # Only one login can be active at a time
+        st.session_state.login_status[USER] = []
+        st.session_state.login_status[THIRD_PARTY] = []
+        st.session_state.page_options = ['Client Login', 'Notary Signature', 'Verification Login']
+        st.experimental_rerun()
 
 if page == 'Notary Signature':
     userType = "Notary"
@@ -329,27 +339,33 @@ if page == 'Notary Signature':
     # st.write("File name:", st.session_state.file.name)
     # st.sidebar.write("Notary: state.doEncrypt:", st.session_state.doEncrypt)
     # st.sidebar.write("Notary: state.password:", st.session_state.password)
-
+     
     st.markdown("### Files Pending Notarization")
 
+    license = st.session_state.login_status[NOTARY][0][3]
+
+    for i in range(len(notary_licence)):
+        if notary_licence[i] == license:
+            notary = notary_options[i]
+            st.session_state.notary = notary
+    st.write(st.session_state.notary)
     pending_file_container = st.empty()
+    
+    get_files_to_notarize(license, pending_file_container)
 
-    get_files_to_notarize(pending_file_container)
-
-    notary = st.selectbox("Select Notary Address", options = accounts[8:10])
-    license = st.text_input("Notary License Number")
+    #notary = st.selectbox("Select Notary Address", options = accounts[8:10])
+    #license = st.text_input("Notary License Number")
     doc_hash = st.text_input("Document Hash")
     address = st.text_input("Owner address")
 
     if st.button("Confirm and notarize"):
-        try:
-            tx_hash = contract.functions.notarizeDoc(notary, license, doc_hash     
+        try:            
+            tx_hash = contract.functions.notarizeDoc(st.session_state.notary, license, doc_hash     
                                                 ).transact({'from': address, 'gas': 1000000})
             receipt = w3.eth.waitForTransactionReceipt(tx_hash)
             st.write("Transaction receipt mined:")            
         except:
             st.write("File is not pending notarization")
-
 
         # file_ipfs_hash = pin_file(
         #     st.session_state.file.name,
@@ -364,7 +380,7 @@ if page == 'Notary Signature':
         # st.write("IPFS Gateway Link to notarized file metadata:")
         # st.markdown(f"[Pinned metadata for notarized file](https://ipfs.io/ipfs/{file_ipfs_hash})")
 
-    get_files_to_notarize(pending_file_container)
+    get_files_to_notarize(license,pending_file_container)
 
 if page == 'Verification Login':
     userType = "User"

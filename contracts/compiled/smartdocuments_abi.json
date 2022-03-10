@@ -1,5 +1,83 @@
 [
 	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "license",
+				"type": "string"
+			}
+		],
+		"name": "getPendingFiles",
+		"outputs": [
+			{
+				"name": "",
+				"type": "string[]"
+			},
+			{
+				"name": "",
+				"type": "address[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "docCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "hash",
+				"type": "string"
+			}
+		],
+		"name": "getDocState",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "notary",
+				"type": "address"
+			},
+			{
+				"name": "license",
+				"type": "string"
+			},
+			{
+				"name": "docHash",
+				"type": "string"
+			}
+		],
+		"name": "notarizeDoc",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"constant": false,
 		"inputs": [
 			{
@@ -29,6 +107,10 @@
 			{
 				"name": "notarize",
 				"type": "bool"
+			},
+			{
+				"name": "license",
+				"type": "string"
 			}
 		],
 		"name": "createDoc",
@@ -36,6 +118,82 @@
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "pendingCount",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getDocuments",
+		"outputs": [
+			{
+				"components": [
+					{
+						"name": "fileName",
+						"type": "string"
+					},
+					{
+						"name": "docType",
+						"type": "string"
+					},
+					{
+						"name": "docOwner",
+						"type": "address"
+					},
+					{
+						"name": "fileHash",
+						"type": "string"
+					},
+					{
+						"name": "ipfsHash",
+						"type": "string"
+					},
+					{
+						"name": "encrypt",
+						"type": "bool"
+					},
+					{
+						"name": "notarize",
+						"type": "bool"
+					},
+					{
+						"name": "status",
+						"type": "uint8"
+					},
+					{
+						"name": "timestamp_created",
+						"type": "uint256"
+					},
+					{
+						"name": "notary",
+						"type": "string"
+					}
+				],
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
 	},
 	{
 		"anonymous": false,
@@ -62,8 +220,30 @@
 			},
 			{
 				"indexed": false,
-				"name": "status",
-				"type": "uint8"
+				"name": "timestamp",
+				"type": "uint256"
+			}
+		],
+		"name": "DocumentCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "docHash",
+				"type": "string"
+			},
+			{
+				"indexed": true,
+				"name": "notary",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "license",
+				"type": "string"
 			},
 			{
 				"indexed": false,
@@ -71,7 +251,7 @@
 				"type": "uint256"
 			}
 		],
-		"name": "DocumentCreated",
+		"name": "DocumentNotarized",
 		"type": "event"
 	}
 ]

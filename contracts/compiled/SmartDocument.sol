@@ -22,9 +22,8 @@ contract SmartDocument {
         bool notarize;
         DocumentStatus status; // NotNotrized, PendingNotarization, Notarized
         uint timestamp_created;
-        
-        //mapping (string => Notary) notaryInfo;
-    
+        string notary;
+           
         //uint owner_DID; //Decentralized identifier
     }
 
@@ -45,16 +44,16 @@ contract SmartDocument {
 
     function createDoc(string memory fileName, string memory docType, 
                         address docOwner, string memory hash,
-                        string memory ipfsHash, bool encrypt, bool notarize) public {
+                        string memory ipfsHash, bool encrypt, bool notarize, string memory license) public {
 
         require(!checkDoc(hash));
 
         if(notarize) {
-            documentList[hash] = Document(fileName, docType, docOwner, hash, ipfsHash, encrypt,notarize, DocumentStatus.PendingNotarization, block.timestamp);   
+            documentList[hash] = Document(fileName, docType, docOwner, hash, ipfsHash, encrypt,notarize, DocumentStatus.PendingNotarization, block.timestamp, license);   
             pendingCount++;         
         }
         else{
-            documentList[hash] = Document(fileName, docType, docOwner, hash, ipfsHash, encrypt, notarize, DocumentStatus.NotNotarized, block.timestamp);                      
+            documentList[hash] = Document(fileName, docType, docOwner, hash, ipfsHash, encrypt, notarize, DocumentStatus.NotNotarized, block.timestamp, license);                      
         }
 
         documentHash[docCount] = hash;
@@ -89,7 +88,7 @@ contract SmartDocument {
         return document;
     }
 
-    function getPendingFiles() public view returns (string[] memory, address[] memory){
+    function getPendingFiles(string memory license) public view returns (string[] memory, address[] memory){
 
         string[] memory dochashes = new string[](pendingCount);
         address[] memory ownerAddress = new address[](pendingCount);
@@ -98,7 +97,7 @@ contract SmartDocument {
 
         for(uint i=0; i<docCount && j< pendingCount; i++){
             Document storage doc = documentList[documentHash[i]];
-            if(doc.status == DocumentStatus.PendingNotarization){
+            if(doc.status == DocumentStatus.PendingNotarization && (keccak256(abi.encodePacked(doc.notary)) == keccak256(abi.encodePacked(license)))){
                 dochashes[j] = doc.fileHash;
                 ownerAddress[j] = doc.docOwner;
                 j++;
