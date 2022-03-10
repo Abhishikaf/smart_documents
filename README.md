@@ -20,8 +20,7 @@ Please verify you have installed all of the requirements.
 
 - The application uses Remix IDE to implement a smart contract. This can be run in the online version on their website.
 - The application uses Ganache to simulate an Ethereum payment network. You must install Ganache.
-- The application uses Metamask to connect the Ganache test network to the smart contract deployed in Remix IDE.
-- The application uses Remix IDE to implement a smart contract. This can be run in the online version on their website.
+- The application uses Metamask to connect the Ganache test network to the smart contract deployed in Remix IDE. You must install Metamask and set up an account.
 - The application requires a Pinata account. You will need to acquire a PINATA_API_KEY and PINATA_SECRET_API_KEY.
 
 ## Usage:
@@ -53,6 +52,9 @@ Note that the Pinata API Key and Pinata Secret Key are enclosed in single quotes
 ### Running the Program
 
 Once you have followed the above steps, the app can be run with the command ```streamlit run app.py``` in the application folder.
+
+
+
 
 ## Future Development:
 
