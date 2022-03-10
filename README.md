@@ -63,9 +63,49 @@ Note that the Pinata API Key and Pinata Secret Key are enclosed in single quotes
 
 ### Running the Program
 
-Once you have followed the above steps, the app can be run with the command ```streamlit run app.py``` in the application folder.
+Once you have followed the above steps, the app can be run with the command ```streamlit run streamlit_app.py``` in the application folder.
 
+The pages can be selected from the left frame's pulldown bar.
 
+#### Client Login
+
+To create a user, use the menu pulldown bar and select Sign Up. Choose a Username and Passord and click SignUp.
+
+To login, select Sign In from the pulldown bar. Enter your username and password and click Login.
+
+After you have logged in, you will be taken to the Select File Page.
+
+#### Select File
+
+Select the account corresponding to a Ganache account.
+
+Enter the type of document to be uploaded.
+
+Drag and drop a file, or click browse files and use the File Browser to select a document.
+
+If you would like the file encrypted, click the encrypt checkbox.
+
+Choose whether you would like the file sent to IFPS and Notarized, or only uploaded to IFPS.
+
+For the purposes of demonstration, we have selected the last two Ganache accounts to be Notary Accounts. Select one of these.
+
+Click Submit.
+
+You may click the Pinned metadata for file if you wish to view the metadata.
+
+#### Notary Signature
+
+We have provided two sample notary login accounts for testing:
+
+Verified Notary 1: 123456
+password: 1234
+
+Verified Notary 2: 654321
+password: 1234
+
+Enter one of these and push login.
+
+#### Verification Login
 
 
 ## Future Development:
