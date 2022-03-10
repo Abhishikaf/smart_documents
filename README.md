@@ -15,13 +15,25 @@ This application was written in Python 3.7, Solidity 0.5.0, and SQL. It uses the
 - web3
 - pandas
 - hashlib
+- cryptography
+- sqlite3
+- pinata
 
 Please verify you have installed all of the requirements.
+
+In addition, there are several other programs and accounts that need to be set up:
 
 - The application uses Remix IDE to implement a smart contract. This can be run in the online version on their website.
 - The application uses Ganache to simulate an Ethereum payment network. You must install Ganache.
 - The application uses Metamask to connect the Ganache test network to the smart contract deployed in Remix IDE. You must install Metamask and set up an account.
 - The application requires a Pinata account. You will need to acquire a PINATA_API_KEY and PINATA_SECRET_API_KEY.
+
+In addition, two libraries of functions specific to this application have been written:
+
+- crypto_funcs
+- login_funcs
+
+These libraries are included.
 
 ## Usage:
 
