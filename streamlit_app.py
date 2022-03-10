@@ -9,6 +9,7 @@ import streamlit as st
 import hashlib
 import sqlite3
 import pandas as pd
+from fpdf import FPDF
 from datetime import datetime
 
 from pinata import pin_file_to_ipfs, pin_json_to_ipfs, convert_data_to_json
@@ -133,6 +134,52 @@ def get_account_history(address, account_history):
         else:
             st.write("This account has not uploaded any documents")
 
+
+
+def generate_receipt(date, user_wallet, f_hash, notary_wallet, license, n_hash, filename):
+    pdf = FPDF(orientation='P', unit='pt', format='A4')
+    pdf.add_page()
+
+
+    pdf.set_font("Times", "B", 24)
+    pdf.cell(0,80, "Notarized Document Receipt", 0, 1, "C")
+
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(100,25, "Notarized Date:")
+
+    pdf.set_font("Times", "", 12)
+    pdf.cell(0,25, "{}".format(date), 0, 1,)
+    pdf.cell(0,5, "", 0, 1)
+
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(100,25, "User Wallet:")
+    pdf.set_font("Times", "", 12)
+    pdf.cell(0,25, "{}".format(user_wallet), 0, 1,)
+
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(100,25, "File Hash:")
+    pdf.set_font("Times", "", 12)
+    pdf.cell(0,25, "{}".format(f_hash), 0, 1,)
+
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(100,25, "Notary License:")
+    pdf.set_font("Times", "", 12)
+    pdf.cell(0,25, "{}".format(license), 0, 1,)
+
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(100,25, "Notary Wallet:")
+    pdf.set_font("Times", "", 12)
+    pdf.cell(0,25, "{}".format(notary_wallet), 0, 1,)
+
+    pdf.set_font("Times", "B", 14)
+    pdf.cell(100,25, "Notary Hash:")
+    pdf.set_font("Times", "", 12)
+    pdf.cell(0,25, "{}".format(n_hash), 0, 1,)
+    f_name=f"{filename}_receipt.pdf"
+    return pdf.output(f_name, "F")
+
+
+
 ################################################################################
 # Helper functions to pin files and json to Pinata
 ################################################################################
@@ -166,7 +213,7 @@ def pin_file(file_name, file_data, encrypted, notarized, license, doc_hash):
     json_ipfs_hash = pin_json_to_ipfs(json_data)
 
     # This doc_hash must be used because encryption may have happened here
-    return json_ipfs_hash
+    return json_ipfs_hash, ipfs_file_hash
 
 
 ##########
@@ -208,7 +255,10 @@ if page == 'Client Login':
     menu=["Sign In","Sign Up"]
     choice=st.selectbox("Menu",menu)
     if choice == "Sign Up":
-        sign_up(conn, userType)
+        st.write("Choose a User account to get started")
+        address = st.selectbox("Select User Account", user_options)
+        st.session_state.address = address
+        sign_up(conn, userType, address)
     elif choice == "Sign In":
         st.session_state.login_status[USER] = sign_in(conn, userType)
         if st.session_state.login_status[USER]:
@@ -221,11 +271,9 @@ if page == 'Client Login':
 
 if page == 'Client File Selection':
     doEncrypt=False
+    st.session_state.address = st.session_state.login_status[USER][0][4]
     st.markdown("## Select File")
-    st.write("Choose an account to get started")
     
-    address = st.selectbox("Select Account", user_options)
-    st.session_state.address = address
     st.markdown("---")
 
     # email_addr = st.text_input("Please register with email address:")
@@ -234,12 +282,14 @@ if page == 'Client File Selection':
     # Save for use on other pages
     # st.session_state.client = email_addr
 
-    st.sidebar.markdown("### Client Wallet Address:")
-    st.sidebar.markdown(f"""<p style = "line-height:50%; font-size:14px">{address}</p>""",unsafe_allow_html=True)
-    st.sidebar.markdown("### Account History")
+    if 'address' in st.session_state:
+        address = st.session_state.address
+        st.sidebar.markdown("### Client Wallet Address:")
+        st.sidebar.markdown(f"""<p style = "line-height:50%; font-size:14px">{address}</p>""",unsafe_allow_html=True)
+        st.sidebar.markdown("### Account History")
 
-    account_history = st.sidebar.empty()
-    get_account_history(address, account_history)
+        account_history = st.sidebar.empty()
+        get_account_history(address, account_history)
 
 
     doc_type = st.text_input("Enter the type of the document to be uploaded")
@@ -260,7 +310,7 @@ if page == 'Client File Selection':
 
         doEncrypt = st.checkbox("Encrypt " + file.name )
         if doEncrypt:
-            password = st.text_input("Enter password:")
+            password = st.text_input("Enter password:", type="password")
             if password:
                 st.session_state.password = password
                 st.session_state.file_data = encrypt_data(file.getvalue(), password)
@@ -296,7 +346,7 @@ if page == 'Client File Selection':
                 st.session_state.license = license
                 doNotarize = True
                 
-            file_ipfs_hash = pin_file(
+            metadata_ipfs_hash, file_ipfs_hash = pin_file(
                     st.session_state.file.name,
                     st.session_state.file_data,
                     st.session_state.doEncrypt,
@@ -305,7 +355,8 @@ if page == 'Client File Selection':
                     doc_hash
                  )  
             st.write("IPFS Gateway Link to file metadata:")
-            st.markdown(f"[Pinned metadata for file](https://ipfs.io/ipfs/{file_ipfs_hash})")
+            st.markdown(f"[Pinned metadata for file](https://ipfs.io/ipfs/{metadata_ipfs_hash})")
+            st.markdown(f"[Pinned File](https://ipfs.io/ipfs/{file_ipfs_hash})")
             
            
             try:
@@ -336,7 +387,8 @@ if page == 'Notary Login':
 if page == 'Notary Signature':
     userType = "Notary"
     st.title("Notarize File")
-       
+
+ 
     st.markdown("### Files Pending Notarization")
 
     license = st.session_state.login_status[NOTARY][0][3]
@@ -374,6 +426,9 @@ if page == 'Notary Signature':
         except:
             st.write("File is not pending notarization")
 
+        fileName = contract.functions.getFileName(doc_hash).call()
+        generate_receipt(st.session_state.now, address, doc_hash, st.session_state.notary, license, notary_hash, fileName)
+
     get_files_to_notarize(license,pending_file_container)
    
     
@@ -384,7 +439,7 @@ if page == 'Verification Login':
     menu=["Sign In","Sign Up"]
     choice=st.selectbox("Menu",menu)
     if choice == "Sign Up":
-        sign_up(conn, userType)
+        sign_up(conn, userType, "")
     elif choice == "Sign In":
         st.session_state.login_status[THIRD_PARTY] = sign_in(conn, userType)
         if st.session_state.login_status[THIRD_PARTY]:
@@ -436,7 +491,9 @@ if page == 'Verification':
         if(notary_hash == notary_hash_from_blkchain):
             st.markdown(" #### File Verification was a success ")
         else:
-            st.markdown(" #### File Verification failed!")
+            #st.markdown(""" #### File Verification <p style = "font-size: 14px;color:red">failed!</p>""", unsafe_allow_html=True)
+            new_title = '<p style="font-family:sans-serif; color:Red; font-size: 24;">File Verification Failed</p>'
+            st.markdown(new_title, unsafe_allow_html=True)
 
         st.markdown("""<b>File Details Retrieved from the Blockchain:</b>""", unsafe_allow_html=True)
         st.markdown("""<b>File Type: </b>""" + verification_data[2],unsafe_allow_html=True)
