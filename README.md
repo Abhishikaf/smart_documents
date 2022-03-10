@@ -5,11 +5,16 @@
 
 This application was conceived to be a means to upload and have access to documents. The additional functionality it implements is blockchain based verification, IFPS (Inter-Planetary File System) based storage, optional encryption, and ability to get documents notarized with payments made through ETH (Ethereum) to a verified notary. The app is implemented with a user interface using Streamlit.
 
+The application uses a Ganache test network, which is used to test applications to be applied to real Ethereum network transactions.
+
 ## Technologies and Installation Guide:
 
-This application was written in Python, Solidity, and SQL. It uses the following technologies:
+This application was written in Python 3.7, Solidity 0.5.0, and SQL. It uses the following technologies:
 
 - streamlit
+- web3
+- pandas
+- hashlib
 
 Please verify you have installed all of the requirements.
 
@@ -25,7 +30,7 @@ This program was designed to use an Ethereum test network simulated by Ganache. 
 
 You will need to start the program Ganache to simulate a local Ethereum network.
 
-Open the program Metamask and enter several accounts from the Ganache test network.
+Open the program Metamask and import several accounts from the Ganache test network, using their private keys which can be accessed by clicking the key icon to the right of the account.
 
 Open the web application Remix IDE. Upload the smart contract file ```SmartDocument.sol```. 
 
@@ -47,7 +52,7 @@ Note that the Pinata API Key and Pinata Secret Key are enclosed in single quotes
 
 Once you have followed the above steps, the app can be run with the command ```streamlit run app.py``` in the application folder.
 
-
+### Running the Program
 
 
 
