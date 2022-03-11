@@ -154,7 +154,7 @@ Nara Arakelyan (n_arakel@yahoo.com)
 
 Preston Hodsman (phodsman@yahoo.com)
 
-David Thomas Hall III (hiflynmedic@aol.com)
+Anthony Thomas Hall III (hiflynmedic@aol.com)
 
 ## License
 
