@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
+
 // Smart Contract to store Document Hash on the blockchain and subsequently notarize it and also verify it
 contract SmartDocument {
 
@@ -8,6 +9,7 @@ contract SmartDocument {
     enum DocumentStatus {NotNotarized, PendingNotarization, Notarized}
 
     // Structure to hold the notary information - Notary wallet address, notary license number, timestamp of notarization, hash of notarized document
+
     struct Notary{
         address notary;
         string license;
@@ -15,11 +17,13 @@ contract SmartDocument {
         string notarized_hash;
     }
 
+
     // Structure to hold the documetn information - document filename, doc description, owner wallet address, document hash, document ipfs hash, 
     // weather encrypted on ipfs, weather it needs notarization, notarization status of the document, timestamp of document creation, 
     // notary wallet address(if applicable otherwise an empty string)
 
         struct Document {
+
         string fileName;
         string docType;
         address docOwner;
