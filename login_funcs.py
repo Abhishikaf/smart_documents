@@ -12,11 +12,11 @@ import sqlite3
 
 
 def create_table(c):
-    c.execute("CREATE TABLE IF NOT EXISTS usertable(usertype TEXT, username TEXT, password TEXT, licence TEXT)")
+    c.execute("CREATE TABLE IF NOT EXISTS usertable(usertype TEXT, username TEXT, password TEXT, licence TEXT, user_wallet TEXT)")
 
-def add_data(conn, usertype, username, password,licence):
+def add_data(conn, usertype, username, password,licence, user_wallet):
     c = conn.cursor()
-    c.execute("INSERT INTO usertable(usertype, username, password,licence) VALUES (?, ?, ?,?)",(usertype, username, password,licence))
+    c.execute("INSERT INTO usertable(usertype, username, password,licence, user_wallet) VALUES (?, ?, ?, ?, ?)",(usertype, username, password,licence, user_wallet))
     conn.commit()
 
 def login_user(c, usertype,username,password,licence):
@@ -74,7 +74,7 @@ def view_all_users(c):
 #    elif choice=="Sign In":
 #        sign_in()
         
-def sign_up(conn, new_usertype): 
+def sign_up(conn, new_usertype, wallet_address): 
     c=conn.cursor()
     st.subheader("Please create a new account to be able use our services")
     if new_usertype=="Notary":
@@ -86,9 +86,9 @@ def sign_up(conn, new_usertype):
     if st.button("SignUp"):
         create_table(c)
         if new_usertype=="Notary":
-            add_data(conn, new_usertype, "", new_password, new_licence)
+            add_data(conn, new_usertype, "", new_password, new_licence, "")
         else:
-            add_data(conn, new_usertype, new_username, new_password,"")
+            add_data(conn, new_usertype, new_username, new_password,"", wallet_address)
 
         st.success("You have successfully created an account")
         st.info("Go to Main Menu to Login")
@@ -104,7 +104,7 @@ def sign_in(conn, usertype):
     else:
         username=st.text_input("User Name")
 
-    password=st.text_input("Password",type="password")
+    password=st.text_input("Password",type="password", key=1)
 
     if st.checkbox("Login"):
         create_table(c)
