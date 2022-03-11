@@ -334,18 +334,21 @@ if page == 'Client File Selection':
         
 
         if st.button("Submit"):   
+            # Calculate the hash of the encrypted/unencrypted file to be stored on IPFS
             doc_hash = calculate_file_hash(st.session_state.file_data)
             
             if choice == "Only IPFS":
+                # No notarization, just Upload the document on IPFS
                 doNotarize = False
                 license = ""
                 st.session_state.license = license        
-            else:
-                
-                license = notary_licence[st.session_state.index] # get_notary_license(notary) --- pull from notary database
+            else:                
+                # Notarize and upload on IPFS
+                license = notary_licence[st.session_state.index] 
                 st.session_state.license = license
                 doNotarize = True
                 
+          # Pin the file and its metadata onto IPFS       
             metadata_ipfs_hash, file_ipfs_hash = pin_file(
                     st.session_state.file.name,
                     st.session_state.file_data,
@@ -360,7 +363,9 @@ if page == 'Client File Selection':
             
            
             try:
+                # Calculate hash of original document
                 doc_hash = calculate_file_hash(file.getvalue())
+                # Create document transaction to create and save the document on the blockchcain
                 tx_hash = contract.functions.createDoc(file.name, doc_type, 
                                         address, doc_hash,
                                         file_ipfs_hash, doEncrypt, doNotarize, st.session_state.license,
@@ -369,10 +374,11 @@ if page == 'Client File Selection':
                 st.write("Blockchain transaction complete, available for Notary")            
             except:
                 st.write("File is already saved on the blockchain and available for Notary!")
-    
-
+   
+#Get Account history and update the account_history container
     get_account_history(st.session_state.address, account_history)
-
+    
+# Notary page. No sign up option as the notaries are assumed to be already registered with their wallet address and license information stored in a local database.
 if page == 'Notary Login':
     userType = "Notary"
     st.session_state.page_index = NOTARY
@@ -384,6 +390,7 @@ if page == 'Notary Login':
         st.session_state.page_options = ['Client Login', 'Notary Signature', 'Verification Login']
         st.experimental_rerun()
 
+# Notary page to be displayed after notary login        
 if page == 'Notary Signature':
     userType = "Notary"
     st.title("Notarize File")
@@ -391,24 +398,31 @@ if page == 'Notary Signature':
  
     st.markdown("### Files Pending Notarization")
 
+    # Get the license number from the login information
     license = st.session_state.login_status[NOTARY][0][3]
 
+    # retrieve notary wallet address using his license info from thr data base
     for i in range(len(notary_licence)):
         if notary_licence[i] == license:
             notary = notary_options[i]
             st.session_state.notary = notary
-    
+            
+    # Container for displaying the pending notarization files info
     pending_file_container = st.empty()
     
+    # get pending files
     get_files_to_notarize(license, pending_file_container)
 
+    # Get the document hash and the document owner address for notarization
     doc_hash = st.text_input("Document Hash")
     address = st.text_input("Owner address")
 
+    # Get current timestamp to attach to the document
     time_stamp= datetime.now()
     now = int(datetime.timestamp(time_stamp))
     st.session_state.now = now
-
+    
+# Calculate notarized document hash by combining, document hash, notary address, notary license number, and current timestamp
     h = hashlib.sha256()
     h.update(str(doc_hash).encode('utf-8'))
     h.update(str(notary).encode('utf-8'))
@@ -418,6 +432,7 @@ if page == 'Notary Signature':
     notary_hash = h.hexdigest()
     
     if st.button("Confirm and notarize"):
+        # Execute notarization transaction using the document owner wallet address, so notary dosen't pay for gas in order to notarize the document
         try:            
             tx_hash = contract.functions.notarizeDoc(st.session_state.notary, license, doc_hash,     
                                                notary_hash, st.session_state.now ).transact({'from': address, 'gas': 1000000})
@@ -425,19 +440,23 @@ if page == 'Notary Signature':
             st.write("Transaction receipt mined:")            
         except:
             st.write("File is not pending notarization")
-
+    # get file name for the notarized file
         fileName = contract.functions.getFileName(doc_hash).call()
+        # Generate pdf receipt
         generate_receipt(st.session_state.now, address, doc_hash, st.session_state.notary, license, notary_hash, fileName)
 
+    # get pending files from blockchain
     get_files_to_notarize(license,pending_file_container)
    
-    
+# Page for Third Party verifier to use for documetn verification. Only notarized documents can be verified    
 if page == 'Verification Login':
     userType = "User"
     # Even if user sign_in() fails, we want this index
     st.session_state.page_index = THIRD_PARTY
     menu=["Sign In","Sign Up"]
     choice=st.selectbox("Menu",menu)
+    
+    # Choice of Signup or sign in
     if choice == "Sign Up":
         sign_up(conn, userType, "")
     elif choice == "Sign In":
@@ -448,7 +467,8 @@ if page == 'Verification Login':
             st.session_state.login_status[USER] = []
             st.session_state.page_options = ['Client Login', 'Notary Login', 'Verification']
             st.experimental_rerun()
-
+            
+# Page for verification displayed after verifier login
 if page == 'Verification':
     userType = "thirdParty"
     st.title("Verify Authenticity")
@@ -457,11 +477,14 @@ if page == 'Verification':
 
     st.sidebar.markdown("""#### Choose an account to get started""")
 
+    # Verifier wallet address
     verifier = st.sidebar.selectbox("Select Account", verifier_options)
 
+    # Radio buttons for selecting the mode calculating the doc hash
     st.sidebar.markdown("""<br><b> Verify using</b></br>""", unsafe_allow_html=True)
     verify_by = st.sidebar.radio("", ("File Upload", "File Hash"))
 
+    # Choice to upload either the document for the doc hash or directly input the hash
     if verify_by == "File Upload":
         st.sidebar.write("Select a file to be uploaded:")
         file = st.file_uploader("")
@@ -472,13 +495,17 @@ if page == 'Verification':
     elif verify_by == "File Hash":
         doc_hash = st.sidebar.text_input("Enter Hash of the document to be verified")
         st.session_state.doc_hash = doc_hash
-
+    
+    # User input for the notarized document hash
     st.sidebar.markdown("""<br> <b>Notarized Hash </b></br>""", unsafe_allow_html=True)
     notary_hash = st.sidebar.text_input(" Enter the Notarized Hash of the Document for verification:")
     
+    
     if st.sidebar.button("Verify"):
+        # Get data from blockchain
         verification_data = contract.functions.getVerifyData(doc_hash).call()
-                
+        
+        # Calculating document hash using the information retrieved from the blockchain        
         h = hashlib.sha256()
         h.update(str(st.session_state.doc_hash).encode('utf-8'))
         h.update(str(verification_data[1]).encode('utf-8'))
@@ -488,13 +515,15 @@ if page == 'Verification':
         st.markdown("""<b> Generated Notarized Hash </b>""", unsafe_allow_html=True)
         st.write(notary_hash_from_blkchain)
 
+        # Compare the provided hash with the retrieved hash
         if(notary_hash == notary_hash_from_blkchain):
             st.markdown(" #### File Verification was a success ")
         else:
             #st.markdown(""" #### File Verification <p style = "font-size: 14px;color:red">failed!</p>""", unsafe_allow_html=True)
             new_title = '<p style="font-family:sans-serif; color:Red; font-size: 24;">File Verification Failed</p>'
             st.markdown(new_title, unsafe_allow_html=True)
-
+       
+    # Printing file details retrieved from Blockchain
         st.markdown("""<b>File Details Retrieved from the Blockchain:</b>""", unsafe_allow_html=True)
         st.markdown("""<b>File Type: </b>""" + verification_data[2],unsafe_allow_html=True)
         st.markdown("""<b>Owner Address: </b>""" + verification_data[0],unsafe_allow_html=True)
