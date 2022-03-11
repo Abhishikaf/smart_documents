@@ -91,8 +91,6 @@ For the purposes of demonstration, we have selected the last two Ganache account
 
 Click Submit.
 
-You may click the Pinned metadata for file if you wish to view the metadata.
-
 #### Notary Signature
 
 We have provided two sample notary login accounts for testing:
@@ -105,8 +103,21 @@ password: 1234
 
 Enter one of these and push login.
 
+Copy the Document Hash of the Document to be notarized into the Document Hash field. Copy the Owner Wallet Address to the Owner Address Field. Click Confirm and Notarize.
+
 #### Verification Login
 
+Create a User Name and Password as above.
+
+##### Method 1
+
+The Notarized Hash is in the PDF file of the Receipt that will be saved to the application folder.
+
+Upload the file and enter the Notarized Hash to check if it is the same. Click Verify.
+
+##### Method 2
+
+Click the File Hash Radio Button, copy the file hash from the receipt into the slot, then copy the notary hash from the receipt. Click Verify.
 
 ## Future Development:
 
