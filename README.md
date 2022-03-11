@@ -17,7 +17,7 @@ This application was written in Python 3.7, Solidity 0.5.0, and SQL. It uses the
 - hashlib
 - cryptography
 - sqlite3
-- pinata
+- fpdf
 
 Please verify you have installed all of the requirements.
 
@@ -32,6 +32,10 @@ In addition, two libraries of functions specific to this application have been w
 
 - crypto_funcs
 - login_funcs
+
+We have also used a library from Trilogy Education Services, LLC:
+
+- pinata
 
 These libraries are included.
 
