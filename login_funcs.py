@@ -1,8 +1,3 @@
-# import os
-# import json
-# from web3 import Web3
-# from pathlib import Path
-# from dotenv import load_dotenv
 import streamlit as st
 import pandas as pd
 import sqlite3 
@@ -10,15 +5,17 @@ import sqlite3
 #conn=sqlite3.connect("data.db")
 #c=conn.cursor()
 
-
+# Craeting table to store user info
 def create_table(c):
     c.execute("CREATE TABLE IF NOT EXISTS usertable(usertype TEXT, username TEXT, password TEXT, licence TEXT, user_wallet TEXT)")
 
+# Adding a user function 
 def add_data(conn, usertype, username, password,licence, user_wallet):
     c = conn.cursor()
     c.execute("INSERT INTO usertable(usertype, username, password,licence, user_wallet) VALUES (?, ?, ?, ?, ?)",(usertype, username, password,licence, user_wallet))
     conn.commit()
 
+#Login function
 def login_user(c, usertype,username,password,licence):
     if usertype == "Notary":
         c.execute("SELECT * FROM usertable WHERE usertype=? AND password=? AND licence=?",(usertype, password, licence))
@@ -27,8 +24,7 @@ def login_user(c, usertype,username,password,licence):
     data=c.fetchall()
     return data
 
-# Should add usertype parameter, and then
-#    c.execute("SELECT * FROM usertable WHERE usertype=? AND username=?",(usertype, username,))
+
 def check_user(conn, username):
     st.write("check_user():", username)
     st.session_state.userChecked = True
@@ -47,7 +43,7 @@ def check_license(conn, identifier):
     data=c.fetchall()
     return data
 
-# Will remove after checking how it works
+# Function for debuging purposed, can be removed after comleting testing
 def view_all_users(c):
     c.execute("SELECT * FROM usertable")    
     data=c.fetchall()
@@ -126,8 +122,5 @@ def sign_in(conn, usertype):
             else:
                 st.warning("User Name does not exist. Please Sign Up")
 
-#        st.sidebar.write("login result:", result)
         return result
     
-#main()
-
